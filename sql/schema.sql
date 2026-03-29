@@ -1,0 +1,55 @@
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS finance_records;
+DROP TABLE IF EXISTS currency_rate;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE currency_rate (
+  id SERIAL PRIMARY KEY,
+  rate DECIMAL(12,2) NOT NULL DEFAULT 12800,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO currency_rate (rate) VALUES (12800);
+
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  image_url TEXT,
+  name VARCHAR(255) NOT NULL,
+  price_uzs DECIMAL(12,2) NOT NULL,
+  price_usd DECIMAL(12,2) NOT NULL,
+  cost_uzs DECIMAL(12,2) NOT NULL,
+  cost_usd DECIMAL(12,2) NOT NULL,
+  profit_usd DECIMAL(12,2) NOT NULL,
+  quantity DECIMAL(12,2) NOT NULL,
+  unit VARCHAR(50) DEFAULT 'dona',
+  product_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sales (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  customer_name VARCHAR(255) NOT NULL,
+  sold_date DATE NOT NULL,
+  quantity_sold DECIMAL(12,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE finance_records (
+  id SERIAL PRIMARY KEY,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('income', 'expense')),
+  title VARCHAR(180) NOT NULL,
+  amount_uzs DECIMAL(12,2) NOT NULL,
+  finance_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
