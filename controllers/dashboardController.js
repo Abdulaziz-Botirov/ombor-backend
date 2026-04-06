@@ -9,6 +9,8 @@ export async function getStats(_req, res) {
       pool.query("SELECT COALESCE(SUM(amount_uzs),0) AS total FROM finance_records WHERE type='expense'"),
     ])
 
+
+    
     res.json({
       totalProducts: products.rows[0].count,
       totalSales: sales.rows[0].count,
