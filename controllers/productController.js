@@ -16,7 +16,7 @@ export async function getProducts(req, res) {
 export async function createProduct(req, res) {
   try {
     const { image_url, name, price_uzs, cost_uzs, quantity, unit, product_date } = req.body
-    const created_by = req.user?.name || 'Nomaʼlum'
+    const created_by = req.user && req.user.name ? req.user.name : 'Nomaʼlum'
 
     console.log('CREATE BODY:', req.body)
     console.log('CREATE USER:', req.user)
