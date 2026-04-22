@@ -1,8 +1,11 @@
 import { pool } from '../config/db.js'
 
-export async function getProducts(_req, res) {
+export async function getProducts(req, res) {
   try {
-    const result = await pool.query('SELECT * FROM products ORDER BY created_at DESC')
+    const result = await pool.query(
+      'SELECT * FROM products ORDER BY id DESC'
+    )
+    console.log('GET PRODUCTS COUNT:', result.rows.length)
     res.json(result.rows)
   } catch (error) {
     console.error('GET PRODUCTS ERROR:', error)
@@ -11,26 +14,49 @@ export async function getProducts(_req, res) {
 }
 
 export async function createProduct(req, res) {
-  const { image_url, name, price_uzs, cost_uzs, quantity, unit, product_date } = req.body
+  try {
+    const { image_url, name, price_uzs, cost_uzs, quantity, unit, product_date } = req.body
+    const created_by = req.user?.name || 'Nomaʼlum'
 
-  const created_by = req.user?.name || 'Nomaʼlum'
+    console.log('CREATE BODY:', req.body)
+    console.log('CREATE USER:', req.user)
 
-  const rateRow = await pool.query('SELECT rate FROM currency_rate ORDER BY updated_at DESC LIMIT 1')
-  const rate = Number(rateRow.rows[0]?.rate || 12900)
+    const rateRow = await pool.query(
+      'SELECT rate FROM currency_rate ORDER BY updated_at DESC LIMIT 1'
+    )
+    const rate = Number(rateRow.rows[0]?.rate || 12900)
 
-  const priceUsd = Number(price_uzs) / rate
-  const costUsd = Number(cost_uzs) / rate
-  const profitUsd = (Number(price_uzs) - Number(cost_uzs)) / rate
+    const priceUsd = Number(price_uzs) / rate
+    const costUsd = Number(cost_uzs) / rate
+    const profitUsd = (Number(price_uzs) - Number(cost_uzs)) / rate
 
-  const result = await pool.query(
-    `INSERT INTO products
-    (image_url, name, price_uzs, price_usd, cost_uzs, cost_usd, profit_usd, quantity, unit, product_date, created_by)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-    RETURNING *`,
-    [image_url, name, price_uzs, priceUsd, cost_uzs, costUsd, profitUsd, quantity, unit, product_date, created_by]
-  )
+    const result = await pool.query(
+      `INSERT INTO products
+      (image_url, name, price_uzs, price_usd, cost_uzs, cost_usd, profit_usd, quantity, unit, product_date, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      RETURNING *`,
+      [
+        image_url || '',
+        name,
+        Number(price_uzs),
+        priceUsd,
+        Number(cost_uzs),
+        costUsd,
+        profitUsd,
+        Number(quantity),
+        unit,
+        product_date,
+        created_by,
+      ]
+    )
 
-  res.status(201).json(result.rows[0])
+    console.log('INSERTED PRODUCT:', result.rows[0])
+
+    res.status(201).json(result.rows[0])
+  } catch (error) {
+    console.error('CREATE PRODUCT ERROR:', error)
+    res.status(500).json({ message: 'Mahsulot qo‘shishda xatolik' })
+  }
 }
 
 export async function updateProduct(req, res) {

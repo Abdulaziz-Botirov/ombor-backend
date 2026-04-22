@@ -4,7 +4,7 @@ import {
   deleteProduct,
   getProducts,
   getProductsByDate,
-  updateProduct
+  updateProduct,
 } from '../controllers/productController.js'
 import authMiddleware from '../middleware/auth.js'
 
