@@ -11,31 +11,26 @@ export async function getProducts(_req, res) {
 }
 
 export async function createProduct(req, res) {
-  try {
-    const { image_url, name, price_uzs, cost_uzs, quantity, unit, product_date } = req.body
+  const { image_url, name, price_uzs, cost_uzs, quantity, unit, product_date } = req.body
 
-    if (!name || !price_uzs || !cost_uzs || !quantity || !unit || !product_date) {
-      return res.status(400).json({ message: 'Barcha maydonlarni to‘ldiring' })
-    }
+  const created_by = req.user?.name || 'Nomaʼlum'
 
-    const rateRow = await pool.query('SELECT rate FROM currency_rate ORDER BY updated_at DESC, id DESC LIMIT 1')
-    const rate = Number(rateRow.rows[0]?.rate || 12900)
-    const priceUsd = Number(price_uzs) / rate
-    const costUsd = Number(cost_uzs) / rate
-    const profitUsd = (Number(price_uzs) - Number(cost_uzs)) / rate
+  const rateRow = await pool.query('SELECT rate FROM currency_rate ORDER BY updated_at DESC LIMIT 1')
+  const rate = Number(rateRow.rows[0]?.rate || 12900)
 
-    const result = await pool.query(
-      `INSERT INTO products (image_url, name, price_uzs, price_usd, cost_uzs, cost_usd, profit_usd, quantity, unit, product_date)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING *`,
-      [image_url || '', name.trim(), price_uzs, priceUsd, cost_uzs, costUsd, profitUsd, quantity, unit, product_date],
-    )
+  const priceUsd = Number(price_uzs) / rate
+  const costUsd = Number(cost_uzs) / rate
+  const profitUsd = (Number(price_uzs) - Number(cost_uzs)) / rate
 
-    res.status(201).json(result.rows[0])
-  } catch (error) {
-    console.error('CREATE PRODUCT ERROR:', error)
-    res.status(500).json({ message: 'Mahsulotni saqlashda xatolik' })
-  }
+  const result = await pool.query(
+    `INSERT INTO products
+    (image_url, name, price_uzs, price_usd, cost_uzs, cost_usd, profit_usd, quantity, unit, product_date, created_by)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    RETURNING *`,
+    [image_url, name, price_uzs, priceUsd, cost_uzs, costUsd, profitUsd, quantity, unit, product_date, created_by]
+  )
+
+  res.status(201).json(result.rows[0])
 }
 
 export async function updateProduct(req, res) {
