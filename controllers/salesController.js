@@ -33,6 +33,8 @@ export async function createSale(req, res) {
       return res.status(400).json({ message: 'Barcha maydonlarni to‘ldiring' })
     }
 
+    const sold_by = req.user && req.user.name ? req.user.name : 'Nomaʼlum'
+
     const productResult = await pool.query(
       'SELECT * FROM products WHERE id = $1',
       [product_id]
@@ -84,9 +86,10 @@ export async function createSale(req, res) {
         total_amount_uzs,
         paid_amount_uzs,
         debt_amount_uzs,
-        is_paid
+        is_paid,
+        sold_by
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [
         product_id,
         customer_name,
@@ -97,6 +100,7 @@ export async function createSale(req, res) {
         paidAmount,
         debtAmount,
         isPaid,
+        sold_by,
       ]
     )
 
@@ -141,9 +145,7 @@ export async function payDebt(req, res) {
     let newPaid = Number(sale.paid_amount_uzs) + payAmount
     const total = Number(sale.total_amount_uzs)
 
-    if (newPaid > total) {
-      newPaid = total
-    }
+    if (newPaid > total) newPaid = total
 
     const newDebt = total - newPaid
     const isPaid = newDebt <= 0
